@@ -47,6 +47,23 @@ trap(struct trapframe *tf)
   }
 
   switch(tf->trapno){
+  case T_PGFLT:
+    // Handle page fault
+    {
+      uint faultaddr = rcr2();  // Get faulting virtual address
+      
+      // Print debug info
+      cprintf("Page fault at address 0x%x, pid=%d\n", faultaddr, myproc()->pid);
+      
+      // Handle the page fault by allocating physical memory
+      if(handle_pgfault(faultaddr) < 0){
+        // Page fault couldn't be handled, kill process
+        cprintf("pid %d %s: page fault at address 0x%x\n",
+                myproc()->pid, myproc()->name, faultaddr);
+        myproc()->killed = 1;
+      }
+    }
+    break;
   case T_IRQ0 + IRQ_TIMER:
     if(cpuid() == 0){
       acquire(&tickslock);

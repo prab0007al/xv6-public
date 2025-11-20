@@ -385,6 +385,60 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   return 0;
 }
 
+// Handle page fault by allocating physical memory on demand
+int
+handle_pgfault(uint faultaddr)
+{
+  struct proc *curproc = myproc();
+  pde_t *pgdir = curproc->pgdir;
+  char *mem;
+  uint a;
+  pte_t *pte;
+
+  // Round down to page boundary
+  a = PGROUNDDOWN(faultaddr);
+
+  // Check if address is within valid range
+  if(a >= curproc->sz){
+    cprintf("Page fault: address 0x%x beyond process size 0x%x\n", a, curproc->sz);
+    return -1;  // Invalid address
+  }
+
+  // Check if page table entry exists
+  pte = walkpgdir(pgdir, (char*)a, 0);
+
+  // If page is already present, this is a different kind of fault
+  if(pte && (*pte & PTE_P)){
+    cprintf("Page fault: page already present at 0x%x\n", a);
+    return -1;  // Page already mapped
+  }
+
+  // Allocate physical memory for this page
+  mem = kalloc();
+  if(mem == 0){
+    cprintf("Page fault: out of memory\n");
+    return -1;  // Out of memory
+  }
+
+  // Clear the allocated page
+  memset(mem, 0, PGSIZE);
+
+  // Map the physical page into the virtual address space
+  if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0){
+    cprintf("Page fault: mappages failed\n");
+    kfree(mem);
+    return -1;  // Mapping failed
+  }
+
+  cprintf("Page fault handled: allocated physical page for VA 0x%x\n", a);
+
+  // Update CR3 to flush TLB
+  switchuvm(curproc);
+
+  return 0;  // Success
+}
+
+
 //PAGEBREAK!
 // Blank page.
 //PAGEBREAK!

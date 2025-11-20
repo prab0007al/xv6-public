@@ -26,6 +26,7 @@ int uptime(void);
 int numvp(void);
 int numpp(void);
 int getptsize(void);
+int mmap(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

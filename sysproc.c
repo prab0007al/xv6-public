@@ -187,6 +187,37 @@ sys_getkptsize(void)
   return count;
 }
 
+int
+sys_mmap(void)
+{
+  int n;  // Number of bytes to allocate
+  struct proc *curproc = myproc();
+  uint oldsz, newsz;
+
+  // Get the argument (number of bytes)
+  if(argint(0, &n) < 0)
+    return 0;  // Invalid input
+
+  // Validate input: must be positive and page-aligned
+  if(n <= 0 || n % PGSIZE != 0)
+    return 0;  // Invalid input
+
+  oldsz = curproc->sz;
+  newsz = oldsz + n;
+
+  // Check if new size exceeds KERNBASE
+  if(newsz >= KERNBASE)
+    return 0;  // Would overflow into kernel space
+
+  // Only increase virtual address space, don't allocate physical memory
+  // We'll allocate physical pages on demand during page fault
+  curproc->sz = newsz;
+
+  // Return the starting virtual address of the mapped region
+  return oldsz;
+}
+
+
 
 
 
