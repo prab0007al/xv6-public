@@ -181,6 +181,10 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
+	_t_waitpid\
+	_t_barrier\
+	_t_threads\
+	_t_lock\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

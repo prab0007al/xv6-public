@@ -89,3 +89,69 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_waitpid(void)
+{
+  int pid;
+
+  if(argint(0, &pid) < 0)
+    return -1;
+
+  return waitpid(pid);
+}
+
+int
+sys_barrier_init(void)
+{
+  int n;
+
+  if(argint(0, &n) < 0)
+    return -1;
+
+  barrier_init(n);
+  return 0;
+}
+
+int
+sys_barrier_check(void)
+{
+  barrier_check();
+  return 0;
+}
+
+int
+sys_thread_create(void)
+{
+  uint *tidptr;
+  void *(*func)(void*);
+  void *arg;
+
+  if(argptr(0, (void*)&tidptr, sizeof(uint*)) < 0)
+    return -1;
+  if(argptr(1, (void*)&func, sizeof(void*)) < 0)
+    return -1;
+  if(argptr(2, (void*)&arg, sizeof(void*)) < 0)
+    return -1;
+
+  return thread_create(tidptr, func, arg);
+}
+
+int
+sys_thread_exit(void)
+{
+  thread_exit();
+  return 0;
+}
+
+int
+sys_thread_join(void)
+{
+  int tid;
+
+  if(argint(0, &tid) < 0)
+    return -1;
+
+  return thread_join(tid);
+}
+

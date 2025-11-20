@@ -1,5 +1,10 @@
 struct stat;
 struct rtcdate;
+// Spinlock structure
+struct lock {
+  uint lockvar;
+};
+
 
 // system calls
 int fork(void);
@@ -23,6 +28,15 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int waitpid(int);
+int barrier_init(int);
+int barrier_check(void);
+int thread_create(uint*, void*(*)(void*), void*);
+int thread_exit(void);
+int thread_join(uint);
+void initiateLock(struct lock*);
+void acquireLock(struct lock*);
+void releaseLock(struct lock*);
 
 // ulib.c
 int stat(const char*, struct stat*);
