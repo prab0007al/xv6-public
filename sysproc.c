@@ -90,6 +90,7 @@ sys_uptime(void)
   return xticks;
 }
 
+//returns numver of virtual pages
 int 
 sys_numvp(void){
 	struct proc *currproc = myproc();
@@ -104,6 +105,7 @@ sys_numvp(void){
 
 }
 
+//returns number of physical pages
 int
 sys_numpp(void){
 	struct proc *curproc = myproc();
@@ -127,4 +129,77 @@ sys_numpp(void){
 	//}
 
 	return count;
-}	
+}
+
+//returns size of page table : user + kernel
+int
+sys_getptsize(void){
+	struct proc* p = myproc();
+	uint size = 0;
+
+	pde_t *pgdir = p->pgdir;
+	for(int i =0;i<NPDENTRIES;i++){
+		if(pgdir[i] & PTE_P){
+			size++;
+		}
+	}
+	return size;
+}
+
+
+// Get USER page table size only
+int
+sys_getuptsize(void)
+{
+  struct proc *curproc = myproc();
+  pde_t *pgdir = curproc->pgdir;
+  uint count = 1;  // 1 for page directory (shared between user and kernel)
+  uint i;
+  
+  // Only count page tables in USER address space (0 to KERNBASE)
+  // PDX(KERNBASE) = 512, so we check first 512 PDE entries
+  for(i = 0; i < PDX(KERNBASE); i++){
+    if(pgdir[i] & PTE_P){
+      count++;
+    }
+  }
+  
+  return count;
+}
+
+// Get KERNEL page table size only
+int
+sys_getkptsize(void)
+{
+  struct proc *curproc = myproc();
+  pde_t *pgdir = curproc->pgdir;
+  uint count = 0;  // Don't count page directory here (already counted in user)
+  uint i;
+
+  // Only count page tables in KERNEL address space (KERNBASE to end)
+  // Start from PDX(KERNBASE) = 512 and go to NPDENTRIES = 1024
+  for(i = PDX(KERNBASE); i < NPDENTRIES; i++){
+    if(pgdir[i] & PTE_P){
+      count++;
+    }
+  }
+
+  return count;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
