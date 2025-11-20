@@ -89,3 +89,42 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int 
+sys_numvp(void){
+	struct proc *currproc = myproc();
+	uint sz = currproc->sz;
+	uint pages;
+
+	pages = PGROUNDUP(sz)/PGSIZE;
+
+	pages += 1;
+
+	return pages;
+
+}
+
+int
+sys_numpp(void){
+	struct proc *curproc = myproc();
+	pde_t *pgdir = curproc->pgdir;
+	uint count = 0;
+	//uint i;
+	pte_t *pte;
+
+
+	for(int i = 0;i<curproc->sz;i+=PGSIZE){
+		pte = walkpgdir(pgdir, (void *)i, 0);
+
+		if(pte && (*pte & PTE_P)){
+			count++;
+		}
+	}
+	count++;
+	//pte = walkpgdir(pgdir, (void*)(KERNBASE-PGSIZE), 0);
+	//if(pte && (*pte & PTE_P)){
+	  //     count++;
+	//}
+
+	return count;
+}	
